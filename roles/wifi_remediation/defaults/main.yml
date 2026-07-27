@@ -1,0 +1,24 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# defaults file for wyebot.wifi.wifi_remediation
+
+# Wyebot Cloud API key for authentication
+wyebot_api_key: ""
+
+# Wyebot Cloud API base URL
+wyebot_api_url: "https://cloud.wyebot.com/api/v1"
+
+# Vendor platform for remediation actions (aruba, cisco, juniper)
+remediation_vendor: "aruba"
+
+# List of remediation actions to execute
+remediation_actions:
+  - channel_change
+  - ap_restart
+
+# Webhook URL for sending remediation notifications
+notification_webhook: ""
+
+# When true, log what would be done without making changes
+dry_run: true

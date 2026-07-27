@@ -1,0 +1,32 @@
+---
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or
+# https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Wyebot Performance Degradation Response
+  hosts: all
+  sources:
+    - wyebot.wifi.wyebot_prometheus:
+        prometheus_url: "http://wyebot-exporter:8014/metrics"
+        poll_interval: 60
+        thresholds:
+          wyebot_channel_utilization_percent: 80
+          wyebot_ap_client_count: 150
+          wyebot_packet_loss_percent: 5
+          wyebot_latency_ms: 100
+          wyebot_noise_floor_dbm: -70
+          wyebot_retry_rate_percent: 15
+
+  rules:
+    - name: Remediate metric threshold breach
+      condition: event.wyebot.event_type == "metric_threshold"
+      action:
+        run_job_template:
+          name: "Wyebot Performance Remediation"
+          organization: Default
+          job_args:
+            extra_vars:
+              metric_name: "{{ event.wyebot.metric }}"
+              metric_value: "{{ event.wyebot.value }}"
+              threshold: "{{ event.wyebot.threshold }}"
+              labels: "{{ event.wyebot.labels }}"

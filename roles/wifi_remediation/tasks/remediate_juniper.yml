@@ -1,0 +1,48 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# Juniper vendor remediation tasks for wyebot.wifi.wifi_remediation
+# Placeholder for juniper.device collection modules
+
+- name: Juniper - Update radio channel
+  ansible.builtin.debug:
+    msg: >-
+      [JUNIPER] Would update radio channel on AP '{{ item.ap_name | default('unknown') }}'
+      via juniper.device.config for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'channel_change' in remediation_actions"
+
+- name: Juniper - Restart AP service
+  ansible.builtin.debug:
+    msg: >-
+      [JUNIPER] Would restart AP service on '{{ item.ap_name | default('unknown') }}'
+      via juniper.device.rpc for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'ap_restart' in remediation_actions"
+
+- name: Juniper - Modify transmit power
+  ansible.builtin.debug:
+    msg: >-
+      [JUNIPER] Would modify transmit power on AP '{{ item.ap_name | default('unknown') }}'
+      via juniper.device.config for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'power_adjustment' in remediation_actions"
+
+- name: Juniper - Dry run summary
+  ansible.builtin.debug:
+    msg: >-
+      [DRY RUN] Juniper remediation skipped for {{ _actionable_alerts | length }} alert(s).
+      Actions that would execute: {{ remediation_actions | join(', ') }}
+  when: dry_run

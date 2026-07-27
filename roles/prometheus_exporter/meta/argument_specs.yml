@@ -1,0 +1,45 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+argument_specs:
+  main:
+    short_description: Deploy a Wyebot Prometheus exporter container
+    description:
+      - Pulls and runs a Wyebot Prometheus exporter Docker container.
+      - Exposes WiFi metrics on a configurable port for Prometheus scraping.
+      - Requires a valid Wyebot Cloud API key.
+    options:
+      wyebot_prometheus_image:
+        type: str
+        default: "wyebotexporter/prometheus:latest"
+        description: Container image for the Wyebot Prometheus exporter.
+
+      wyebot_prometheus_port:
+        type: int
+        default: 8014
+        description: Host port to expose the exporter metrics endpoint.
+
+      wyebot_prometheus_api_key:
+        type: str
+        required: true
+        description: Wyebot Cloud API key for authentication.
+
+      wyebot_prometheus_api_url:
+        type: str
+        default: "https://cloud.wyebot.com/api/v1"
+        description: Wyebot Cloud API base URL.
+
+      wyebot_prometheus_container_name:
+        type: str
+        default: "wyebot-prometheus-exporter"
+        description: Name of the Docker container.
+
+      wyebot_prometheus_restart_policy:
+        type: str
+        default: "always"
+        description: Container restart policy (always, on-failure, unless-stopped, no).
+        choices:
+          - always
+          - on-failure
+          - unless-stopped
+          - "no"

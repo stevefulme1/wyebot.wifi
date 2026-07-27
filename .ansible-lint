@@ -1,0 +1,14 @@
+---
+profile: production
+skip_list:
+  - yaml[line-length]
+  - name[template]
+  - fqcn[action-core]
+  - var-naming[no-role-prefix]
+warn_list:
+  - experimental
+  - role-name
+exclude_paths:
+  - .github/
+  - changelogs/
+  - docs/

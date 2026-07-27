@@ -1,0 +1,32 @@
+---
+namespace: wyebot
+name: wifi
+version: 0.1.0
+readme: README.md
+authors:
+  - Steve Fulmer <sfulmer@redhat.com>
+description: Ansible collection for Wyebot WiFi monitoring platform - modules, plugins, EDA event sources, and roles for closed-loop WiFi automation
+license:
+  - GPL-3.0-or-later
+tags:
+  - wifi
+  - monitoring
+  - networking
+  - eda
+  - wyebot
+  - wireless
+  - automation
+repository: https://github.com/stevefulmer/wyebot.wifi
+documentation: https://github.com/stevefulmer/wyebot.wifi/blob/main/README.md
+homepage: https://github.com/stevefulmer/wyebot.wifi
+issues: https://github.com/stevefulmer/wyebot.wifi/issues
+dependencies: {}
+build_ignore:
+  - .git
+  - .github
+  - tests
+  - docs
+  - "*.tar.gz"
+  - .tox
+  - .pytest_cache
+  - __pycache__

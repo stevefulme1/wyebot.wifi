@@ -1,0 +1,48 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# Aruba vendor remediation tasks for wyebot.wifi.wifi_remediation
+
+- name: Aruba - Optimize channel assignment
+  ansible.builtin.debug:
+    msg: >-
+      [ARUBA] Would change channel on AP '{{ item.ap_name | default('unknown') }}'
+      from {{ item.channel | default('auto') }} to optimal channel
+      for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'channel_change' in remediation_actions"
+
+- name: Aruba - Restart access point
+  ansible.builtin.debug:
+    msg: >-
+      [ARUBA] Would restart AP '{{ item.ap_name | default('unknown') }}'
+      to resolve alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'ap_restart' in remediation_actions"
+
+- name: Aruba - Adjust transmit power
+  ansible.builtin.debug:
+    msg: >-
+      [ARUBA] Would adjust transmit power on AP '{{ item.ap_name | default('unknown') }}'
+      for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'power_adjustment' in remediation_actions"
+
+- name: Aruba - Dry run summary
+  ansible.builtin.debug:
+    msg: >-
+      [DRY RUN] Aruba remediation skipped for {{ _actionable_alerts | length }} alert(s).
+      Actions that would execute: {{ remediation_actions | join(', ') }}
+  when: dry_run

@@ -1,0 +1,11 @@
+---
+# defaults file for wyebot.wifi.grafana_dashboards
+
+grafana_url: "http://localhost:3000"
+grafana_api_key: ""
+wyebot_dashboard_folder: "Wyebot"
+wyebot_dashboards:
+  - sensor_overview
+  - network_health
+  - alerts
+  - spectrum

@@ -1,0 +1,40 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+argument_specs:
+  main:
+    short_description: Continuous sensor health monitoring for Wyebot WiFi platform
+    description:
+      - Monitors Wyebot sensor health by querying the Cloud API.
+      - Identifies unhealthy sensors, logs results, and optionally sends alert emails.
+      - Generates a formatted health report with per-sensor details.
+    options:
+      wyebot_api_key:
+        description: API key for authenticating with the Wyebot Cloud API.
+        type: str
+        required: true
+        no_log: true
+      wyebot_api_url:
+        description: Base URL of the Wyebot Cloud API.
+        type: str
+        default: "https://cloud.wyebot.com/api/v1"
+      wyebot_monitor_interval:
+        description: Monitoring interval in seconds between health checks.
+        type: int
+        default: 300
+      wyebot_health_threshold:
+        description: >-
+          Health score threshold (0-100). Sensors scoring below this value
+          are flagged as unhealthy and trigger alerts.
+        type: int
+        default: 70
+      wyebot_alert_email:
+        description: >-
+          Email address to receive alerts when sensors are unhealthy.
+          Leave empty to disable email alerts.
+        type: str
+        default: ""
+      wyebot_monitor_log_path:
+        description: Directory path for storing health check logs and reports.
+        type: str
+        default: "/var/log/wyebot"

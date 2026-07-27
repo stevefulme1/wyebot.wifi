@@ -1,0 +1,20 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+galaxy_info:
+  author: Steve Fulmer
+  description: Closed-loop WiFi remediation using Wyebot alert data with multi-vendor support
+  company: Red Hat
+
+  license: GPL-3.0-or-later
+
+  min_ansible_version: "2.15"
+
+  galaxy_tags:
+    - wyebot
+    - remediation
+    - wifi
+    - automation
+    - networking
+
+dependencies: []

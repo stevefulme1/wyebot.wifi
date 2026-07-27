@@ -1,0 +1,245 @@
+---
+name: CI
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+
+jobs:
+  lint:
+    name: Lint (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/wyebot/wifi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: lint-pip-${{ matrix.python-version }}-${{ hashFiles('ansible_collections/wyebot/wifi/requirements.txt', 'ansible_collections/wyebot/wifi/test-requirements.txt') }}
+          restore-keys: |
+            lint-pip-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        working-directory: ansible_collections/wyebot/wifi
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-lint yamllint flake8 pylint ansible-core ansible-nox nox
+          pip install -r requirements.txt
+          pip install -r test-requirements.txt
+
+      - name: Run yamllint
+        working-directory: ansible_collections/wyebot/wifi
+        run: yamllint -c .yamllint .
+
+      - name: Run ansible-lint
+        working-directory: ansible_collections/wyebot/wifi
+        run: ansible-lint
+
+      - name: Run flake8
+        working-directory: ansible_collections/wyebot/wifi
+        run: flake8 plugins/
+
+      - name: Run pylint
+        working-directory: ansible_collections/wyebot/wifi
+        run: pylint plugins/ --disable=import-error,no-name-in-module
+
+  nox:
+    name: Nox (ansible-nox)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/wyebot/wifi
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install nox and ansible-nox
+        run: pip install nox ansible-nox
+
+      - name: Run ansible-nox sessions
+        working-directory: ansible_collections/wyebot/wifi
+        run: nox
+
+  sanity:
+    name: Sanity (Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version: ["2.16", "2.17", "2.18"]
+        python-version: ["3.12", "3.13"]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/wyebot/wifi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: sanity-pip-${{ matrix.python-version }}-${{ matrix.ansible-version }}
+          restore-keys: |
+            sanity-pip-${{ matrix.python-version }}-
+
+      - name: Install ansible-core
+        run: pip install "ansible-core~=${{ matrix.ansible-version }}.0"
+
+      - name: Run sanity tests
+        working-directory: ansible_collections/wyebot/wifi
+        run: ansible-test sanity --docker default --color yes
+
+  unit:
+    name: Unit (Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version: ["2.16", "2.17", "2.18"]
+        python-version: ["3.12", "3.13"]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/wyebot/wifi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: unit-pip-${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ hashFiles('ansible_collections/wyebot/wifi/test-requirements.txt') }}
+          restore-keys: |
+            unit-pip-${{ matrix.python-version }}-${{ matrix.ansible-version }}-
+
+      - name: Install dependencies
+        working-directory: ansible_collections/wyebot/wifi
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ansible-core~=${{ matrix.ansible-version }}.0"
+          pip install -r test-requirements.txt
+          pip install pytest pytest-cov pytest-xdist coverage
+
+      - name: Run unit tests with coverage
+        working-directory: ansible_collections/wyebot/wifi
+        run: |
+          pytest tests/unit/ \
+            -vvv \
+            --cov=plugins \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
+            --color=yes
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-unit-py${{ matrix.python-version }}-ansible${{ matrix.ansible-version }}
+          path: ansible_collections/wyebot/wifi/coverage.xml
+          retention-days: 30
+
+  integration:
+    name: Integration (Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version: ["2.16", "2.17", "2.18"]
+        python-version: ["3.12", "3.13"]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/wyebot/wifi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: integ-pip-${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ hashFiles('ansible_collections/wyebot/wifi/test-requirements.txt') }}
+          restore-keys: |
+            integ-pip-${{ matrix.python-version }}-${{ matrix.ansible-version }}-
+
+      - name: Install dependencies
+        working-directory: ansible_collections/wyebot/wifi
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ansible-core~=${{ matrix.ansible-version }}.0"
+          pip install -r test-requirements.txt
+          pip install pytest pytest-xdist
+
+      - name: Run integration tests with mock API server
+        working-directory: ansible_collections/wyebot/wifi
+        run: |
+          pytest tests/integration/ \
+            -vvv \
+            --color=yes
+
+  all_green:
+    name: All CI checks passed
+    if: ${{ always() }}
+    needs:
+      - lint
+      - nox
+      - sanity
+      - unit
+      - integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all jobs succeeded
+        run: |
+          python -c "
+          import sys
+          results = {
+              'lint': '${{ needs.lint.result }}',
+              'nox': '${{ needs.nox.result }}',
+              'sanity': '${{ needs.sanity.result }}',
+              'unit': '${{ needs.unit.result }}',
+              'integration': '${{ needs.integration.result }}',
+          }
+          failed = [k for k, v in results.items() if v == 'failure']
+          if failed:
+              print('FAILED jobs: ' + ', '.join(failed))
+              sys.exit(1)
+          print('All CI checks passed')
+          "

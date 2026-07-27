@@ -1,0 +1,42 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# tasks file for wyebot.wifi.wifi_remediation
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - wyebot_api_key | length > 0
+    fail_msg: "wyebot_api_key must be set to a non-empty value"
+    quiet: true
+
+- name: Gather alert data from Wyebot sensors
+  wyebot.wifi.wyebot_alert_info:
+    api_key: "{{ wyebot_api_key }}"
+    api_url: "{{ wyebot_api_url }}"
+  register: _wyebot_alerts
+
+- name: Filter actionable alerts for remediation
+  ansible.builtin.set_fact:
+    _actionable_alerts: >-
+      {{
+        _wyebot_alerts.alerts
+        | selectattr('severity', 'in', ['critical', 'high'])
+        | list
+      }}
+
+- name: Display actionable alert summary
+  ansible.builtin.debug:
+    msg: "Found {{ _actionable_alerts | length }} actionable alert(s) for remediation"
+
+- name: Include vendor-specific remediation tasks
+  ansible.builtin.include_tasks:
+    file: "remediate_{{ remediation_vendor }}.yml"
+  when: _actionable_alerts | length > 0
+
+- name: Include notification tasks
+  ansible.builtin.include_tasks:
+    file: notify.yml
+  when:
+    - notification_webhook | length > 0
+    - _actionable_alerts | length > 0

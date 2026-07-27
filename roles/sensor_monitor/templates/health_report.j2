@@ -1,0 +1,44 @@
+{# GNU General Public License v3.0+ #}
+{# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt) #}
+================================================================================
+                        Wyebot Sensor Health Report
+================================================================================
+Generated: {{ ansible_date_time.iso8601 }}
+Host:      {{ inventory_hostname }}
+Threshold: {{ wyebot_health_threshold }}
+
+--- Summary -------- -------- -------- -------- -------- -------- -------- -----
+Total Sensors:    {{ _wyebot_sensor_result.sensors | length }}
+Healthy (Online): {{ _wyebot_healthy_sensors | length }}
+Unhealthy:        {{ _wyebot_unhealthy_sensors | length }}
+Health Rate:      {{ '%d' | format((_wyebot_healthy_sensors | length) / (_wyebot_sensor_result.sensors | length) * 100) if _wyebot_sensor_result.sensors | length > 0 else 'N/A' }}%
+
+--- Sensor Details - -------- -------- -------- -------- -------- -------- -----
+{% if _wyebot_sensor_result.sensors | length > 0 %}
+{{ '%-20s' | format('Name') }} {{ '%-10s' | format('Status') }} {{ '%-16s' | format('IP Address') }} {{ '%-20s' | format('Location') }} {{ '%-12s' | format('Model') }} {{ '%-10s' | format('Firmware') }}
+{{ '-' * 20 }} {{ '-' * 10 }} {{ '-' * 16 }} {{ '-' * 20 }} {{ '-' * 12 }} {{ '-' * 10 }}
+{% for sensor in _wyebot_sensor_result.sensors | sort(attribute='name') %}
+{{ '%-20s' | format(sensor.name | truncate(20, True, '..')) }} {{ '%-10s' | format(sensor.status) }} {{ '%-16s' | format(sensor.ip_address) }} {{ '%-20s' | format(_wyebot_location_map[sensor.location_id] | default('Unknown') | truncate(20, True, '..')) }} {{ '%-12s' | format(sensor.model | default('N/A') | truncate(12, True, '..')) }} {{ '%-10s' | format(sensor.firmware_version | default('N/A')) }}
+{% endfor %}
+{% else %}
+No sensors found.
+{% endif %}
+
+--- Alerts --------- -------- -------- -------- -------- -------- -------- -----
+{% if _wyebot_unhealthy_sensors | length > 0 %}
+The following sensors are below the health threshold or reporting non-online status:
+
+{% for sensor in _wyebot_unhealthy_sensors | sort(attribute='name') %}
+  [ALERT] {{ sensor.name }} (ID: {{ sensor.id }})
+          Status:   {{ sensor.status }}
+          Location: {{ _wyebot_location_map[sensor.location_id] | default('Unknown') }}
+          IP:       {{ sensor.ip_address }}
+          MAC:      {{ sensor.mac_address }}
+{% endfor %}
+{% else %}
+No alerts. All sensors are operating normally.
+{% endif %}
+
+================================================================================
+                              End of Report
+================================================================================

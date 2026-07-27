@@ -1,0 +1,27 @@
+---
+galaxy_info:
+  author: Steve Fulmer
+  description: Install Wyebot Grafana dashboard templates for WiFi sensor monitoring
+  company: Wyebot
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.15"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - wyebot
+    - grafana
+    - monitoring
+    - dashboard
+    - wifi
+
+dependencies: []

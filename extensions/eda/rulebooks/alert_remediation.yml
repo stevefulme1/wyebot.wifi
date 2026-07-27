@@ -1,0 +1,47 @@
+---
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or
+# https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Wyebot Alert Remediation
+  hosts: all
+  sources:
+    - wyebot.wifi.wyebot_events:
+        api_key: "{{ WYEBOT_API_KEY }}"
+        severity_filter:
+          - critical
+          - warning
+        poll_interval: 30
+
+  rules:
+    - name: Remediate critical alerts
+      condition: >-
+        event.wyebot.event_type == "alert" and
+        event.wyebot.alert.severity == "critical"
+      action:
+        run_job_template:
+          name: "Wyebot Critical Alert Remediation"
+          organization: Default
+          job_args:
+            extra_vars:
+              alert_id: "{{ event.wyebot.alert.id }}"
+              alert_category: "{{ event.wyebot.alert.category }}"
+              sensor_id: "{{ event.wyebot.sensor_id }}"
+              location_id: "{{ event.wyebot.location_id }}"
+              severity: "{{ event.wyebot.alert.severity }}"
+
+    - name: Investigate warning alerts
+      condition: >-
+        event.wyebot.event_type == "alert" and
+        event.wyebot.alert.severity == "warning"
+      action:
+        run_job_template:
+          name: "Wyebot Warning Alert Investigation"
+          organization: Default
+          job_args:
+            extra_vars:
+              alert_id: "{{ event.wyebot.alert.id }}"
+              alert_category: "{{ event.wyebot.alert.category }}"
+              sensor_id: "{{ event.wyebot.sensor_id }}"
+              location_id: "{{ event.wyebot.location_id }}"
+              severity: "{{ event.wyebot.alert.severity }}"

@@ -1,0 +1,7 @@
+---
+- name: Test grafana_dashboards role
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: wyebot.wifi.grafana_dashboards
+      grafana_api_key: "test-key"

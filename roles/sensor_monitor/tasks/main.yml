@@ -1,0 +1,101 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# tasks file for wyebot.wifi.sensor_monitor
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - wyebot_api_key | length > 0
+    fail_msg: "wyebot_api_key must be set to a non-empty value"
+    quiet: true
+
+- name: Ensure log directory exists
+  ansible.builtin.file:
+    path: "{{ wyebot_monitor_log_path }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Gather sensor information
+  wyebot.wifi.wyebot_sensor_info:
+    api_key: "{{ wyebot_api_key }}"
+    api_url: "{{ wyebot_api_url }}"
+  register: _wyebot_sensor_result
+
+- name: Gather location information
+  wyebot.wifi.wyebot_location_info:
+    api_key: "{{ wyebot_api_key }}"
+    api_url: "{{ wyebot_api_url }}"
+  register: _wyebot_location_result
+
+- name: Build location lookup map
+  ansible.builtin.set_fact:
+    _wyebot_location_map: >-
+      {{ _wyebot_location_result.locations
+         | items2dict(key_name='id', value_name='name') }}
+
+- name: Calculate sensor health scores
+  ansible.builtin.set_fact:
+    _wyebot_sensor_health: >-
+      {{
+        _wyebot_sensor_result.sensors | map('combine', {})
+        | list
+      }}
+
+- name: Identify unhealthy sensors
+  ansible.builtin.set_fact:
+    _wyebot_unhealthy_sensors: >-
+      {{
+        _wyebot_sensor_result.sensors
+        | selectattr('status', 'ne', 'online')
+        | list
+      }}
+    _wyebot_healthy_sensors: >-
+      {{
+        _wyebot_sensor_result.sensors
+        | selectattr('status', 'eq', 'online')
+        | list
+      }}
+
+- name: Log health check results
+  ansible.builtin.copy:
+    content: |
+      Wyebot Sensor Health Check - {{ ansible_date_time.iso8601 }}
+      Total sensors: {{ _wyebot_sensor_result.sensors | length }}
+      Healthy (online): {{ _wyebot_healthy_sensors | length }}
+      Unhealthy: {{ _wyebot_unhealthy_sensors | length }}
+      Threshold: {{ wyebot_health_threshold }}
+      {% for sensor in _wyebot_unhealthy_sensors %}
+      ALERT: {{ sensor.name }} (ID: {{ sensor.id }}) - Status: {{ sensor.status }}
+      {% endfor %}
+    dest: "{{ wyebot_monitor_log_path }}/health_check_{{ ansible_date_time.iso8601_basic_short }}.log"
+    mode: "0644"
+  become: true
+
+- name: Send alert notification for unhealthy sensors
+  ansible.builtin.uri:
+    url: "{{ wyebot_alert_webhook | default('') }}"
+    method: POST
+    body_format: json
+    body:
+      subject: "[Wyebot Alert] {{ _wyebot_unhealthy_sensors | length }} sensor(s) unhealthy"
+      timestamp: "{{ ansible_date_time.iso8601 }}"
+      threshold: "{{ wyebot_health_threshold }}"
+      unhealthy_sensors: "{{ _wyebot_unhealthy_sensors }}"
+      total_sensors: "{{ _wyebot_sensor_result.sensors | length }}"
+      healthy_count: "{{ _wyebot_healthy_sensors | length }}"
+      unhealthy_count: "{{ _wyebot_unhealthy_sensors | length }}"
+    status_code: [200, 201, 202, 204]
+  when:
+    - wyebot_alert_webhook is defined
+    - wyebot_alert_webhook | length > 0
+    - _wyebot_unhealthy_sensors | length > 0
+  failed_when: false
+
+- name: Generate health report
+  ansible.builtin.template:
+    src: health_report.j2
+    dest: "{{ wyebot_monitor_log_path }}/health_report_{{ ansible_date_time.iso8601_basic_short }}.txt"
+    mode: "0644"
+  become: true

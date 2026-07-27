@@ -1,0 +1,66 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# argument spec file for wyebot.wifi.wifi_remediation
+
+argument_specs:
+  main:
+    short_description: Closed-loop WiFi remediation using Wyebot alert data
+    description:
+      - Gathers alert data from Wyebot sensors, filters actionable alerts,
+        and executes vendor-specific remediation actions such as channel changes,
+        AP restarts, and power adjustments.
+      - Supports Aruba, Cisco, and Juniper vendor platforms.
+      - Includes a dry-run mode (enabled by default) that logs planned actions
+        without making changes.
+    options:
+      wyebot_api_key:
+        type: str
+        required: true
+        description:
+          - Wyebot Cloud API key for authentication.
+          - Must be set to a non-empty value.
+        default: ""
+      wyebot_api_url:
+        type: str
+        required: false
+        description:
+          - Wyebot Cloud API base URL.
+        default: "https://cloud.wyebot.com/api/v1"
+      remediation_vendor:
+        type: str
+        required: false
+        description:
+          - Vendor platform for remediation actions.
+          - Determines which vendor-specific task file is included.
+        default: "aruba"
+        choices:
+          - aruba
+          - cisco
+          - juniper
+      remediation_actions:
+        type: list
+        elements: str
+        required: false
+        description:
+          - List of remediation actions to execute.
+          - Supported values depend on the vendor but typically include
+            channel_change, ap_restart, and power_adjustment.
+        default:
+          - channel_change
+          - ap_restart
+      notification_webhook:
+        type: str
+        required: false
+        description:
+          - Webhook URL for sending remediation notifications.
+          - When set to a non-empty value, a JSON payload with the remediation
+            summary is POSTed to this URL after remediation completes.
+        default: ""
+      dry_run:
+        type: bool
+        required: false
+        description:
+          - When true, log planned remediation actions without executing them.
+          - Enabled by default for safety.
+        default: true

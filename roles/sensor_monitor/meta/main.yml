@@ -1,0 +1,25 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+galaxy_info:
+  author: Steve Fulmer
+  description: Continuous sensor health monitoring for Wyebot WiFi platform
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.15"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  galaxy_tags:
+    - wyebot
+    - monitoring
+    - sensor
+    - wifi
+    - health
+
+dependencies: []

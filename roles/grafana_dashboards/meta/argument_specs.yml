@@ -1,0 +1,37 @@
+---
+# argument spec file for wyebot.wifi.grafana_dashboards
+
+argument_specs:
+  main:
+    short_description: Install Wyebot Grafana dashboard templates.
+    description:
+      - Creates a Grafana folder and uploads Wyebot WiFi sensor dashboard
+        JSON templates via the Grafana HTTP API.
+    options:
+      grafana_url:
+        type: str
+        required: false
+        default: "http://localhost:3000"
+        description: Base URL of the Grafana instance.
+      grafana_api_key:
+        type: str
+        required: true
+        no_log: true
+        description: Grafana API key or service account token with dashboard write permissions.
+      wyebot_dashboard_folder:
+        type: str
+        required: false
+        default: "Wyebot"
+        description: Name of the Grafana folder to hold Wyebot dashboards.
+      wyebot_dashboards:
+        type: list
+        elements: str
+        required: false
+        default:
+          - sensor_overview
+          - network_health
+          - alerts
+          - spectrum
+        description: >-
+          List of dashboard template names to upload. Each name must correspond
+          to a JSON file in files/dashboards/ (without the .json extension).

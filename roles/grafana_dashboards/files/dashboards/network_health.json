@@ -1,0 +1,279 @@
+{
+  "uid": "wyebot-network-health",
+  "title": "Wyebot - Network Health",
+  "description": "WiFi network health metrics including signal strength, channel utilization, and client counts",
+  "tags": ["wyebot", "network", "health", "wifi"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "label": "Data Source"
+      },
+      {
+        "name": "sensor",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(wyebot_sensor_info, sensor_name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {},
+        "label": "Sensor"
+      },
+      {
+        "name": "ssid",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(wyebot_network_health_score, ssid)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {},
+        "label": "SSID"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Overall Network Health Score",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg(wyebot_network_health_score{sensor_name=~\"$sensor\", ssid=~\"$ssid\"})",
+          "legendFormat": "Health Score",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "orange", "value": 40},
+              {"color": "yellow", "value": 60},
+              {"color": "light-green", "value": 75},
+              {"color": "green", "value": 90}
+            ]
+          },
+          "color": {"mode": "thresholds"},
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 2,
+      "title": "Channel Utilization Heatmap",
+      "type": "heatmap",
+      "gridPos": {"h": 8, "w": 16, "x": 8, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "wyebot_channel_utilization_percent{sensor_name=~\"$sensor\"}",
+          "legendFormat": "Ch {{channel}} ({{band}})",
+          "range": true,
+          "format": "heatmap"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false}
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "calculate": true,
+        "calculation": {
+          "xBuckets": {"mode": "size", "value": "5m"},
+          "yBuckets": {"mode": "count", "value": "10"}
+        },
+        "color": {
+          "mode": "scheme",
+          "scheme": "RdYlGn",
+          "reverse": true,
+          "fill": "dark-orange",
+          "exponent": 0.5
+        },
+        "yAxis": {
+          "unit": "percent",
+          "axisLabel": "Utilization"
+        },
+        "tooltip": {"show": true, "yHistogram": false},
+        "cellGap": 1,
+        "showValue": "never"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Signal Strength Distribution (RSSI)",
+      "type": "histogram",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "wyebot_client_rssi_dbm{sensor_name=~\"$sensor\", ssid=~\"$ssid\"}",
+          "legendFormat": "{{client_mac}} ({{ssid}})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "dBm",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "orange", "value": -80},
+              {"color": "yellow", "value": -70},
+              {"color": "green", "value": -50}
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "bucketSize": 5,
+        "bucketOffset": 0,
+        "combine": false,
+        "fillOpacity": 80,
+        "gradientMode": "scheme",
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "single"}
+      }
+    },
+    {
+      "id": 4,
+      "title": "Network Test Pass/Fail Rates",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(wyebot_network_test_pass_total{sensor_name=~\"$sensor\", ssid=~\"$ssid\"}[5m])) by (test_type)",
+          "legendFormat": "Pass - {{test_type}}",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(wyebot_network_test_fail_total{sensor_name=~\"$sensor\", ssid=~\"$ssid\"}[5m])) by (test_type)",
+          "legendFormat": "Fail - {{test_type}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisLabel": "Tests / sec",
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 50,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "stacking": {"mode": "normal", "group": "A"},
+            "barAlignment": 0
+          },
+          "unit": "ops",
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byRegexp", "options": "/^Fail/"},
+            "properties": [
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byRegexp", "options": "/^Pass/"},
+            "properties": [
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "bottom", "calcs": ["sum"]}
+      }
+    },
+    {
+      "id": 5,
+      "title": "Client Connection Count",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "wyebot_connected_clients_total{sensor_name=~\"$sensor\", ssid=~\"$ssid\"}",
+          "legendFormat": "{{sensor_name}} - {{ssid}} ({{band}})",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisLabel": "Clients",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "showPoints": "auto",
+            "pointSize": 5,
+            "spanNulls": false,
+            "stacking": {"mode": "none"}
+          },
+          "unit": "none",
+          "decimals": 0,
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max", "mean"]}
+      }
+    }
+  ]
+}

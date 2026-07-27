@@ -1,0 +1,56 @@
+---
+# tasks file for wyebot.wifi.grafana_dashboards
+
+- name: Create Grafana dashboard folder
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/folders"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_api_key }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      title: "{{ wyebot_dashboard_folder }}"
+    status_code:
+      - 200
+      - 409
+  register: _grafana_folder_result
+
+- name: Look up existing Grafana folder
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/folders"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ grafana_api_key }}"
+    status_code:
+      - 200
+  register: _grafana_folders
+
+- name: Set folder UID fact
+  ansible.builtin.set_fact:
+    _grafana_folder_uid: >-
+      {{ (_grafana_folders.json | selectattr('title', 'equalto', wyebot_dashboard_folder) | first).uid }}
+
+- name: Load dashboard JSON templates
+  ansible.builtin.set_fact:
+    _dashboard_json: "{{ lookup('ansible.builtin.file', role_path ~ '/files/dashboards/' ~ item ~ '.json') | from_json }}"
+  loop: "{{ wyebot_dashboards }}"
+  register: _dashboard_templates
+
+- name: Upload Wyebot dashboards to Grafana
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/dashboards/db"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ grafana_api_key }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      dashboard: "{{ (item.ansible_facts._dashboard_json) | combine({'id': None}) }}"
+      folderUid: "{{ _grafana_folder_uid }}"
+      overwrite: true
+    status_code:
+      - 200
+  loop: "{{ _dashboard_templates.results }}"
+  loop_control:
+    label: "{{ item.item }}"

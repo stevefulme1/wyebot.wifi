@@ -1,0 +1,56 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# tasks file for wyebot.wifi.prometheus_exporter
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - wyebot_prometheus_api_key | length > 0
+    fail_msg: "wyebot_prometheus_api_key must be set to a non-empty value"
+    quiet: true
+
+- name: Pull Wyebot Prometheus exporter image
+  ansible.builtin.command:
+    cmd: >-
+      docker pull {{ wyebot_prometheus_image }}
+  changed_when: "'Downloaded newer image' in _pull_result.stdout or 'Pull complete' in _pull_result.stdout"
+  register: _pull_result
+
+- name: Check if exporter container exists
+  ansible.builtin.command:
+    cmd: docker inspect {{ wyebot_prometheus_container_name }}
+  register: _container_check
+  changed_when: false
+  failed_when: false
+
+- name: Remove existing exporter container if present
+  ansible.builtin.command:
+    cmd: docker rm -f {{ wyebot_prometheus_container_name }}
+  when: _container_check.rc == 0
+  changed_when: true
+
+- name: Deploy Wyebot Prometheus exporter container
+  ansible.builtin.command:
+    cmd: >-
+      docker run -d
+      --name {{ wyebot_prometheus_container_name }}
+      --restart {{ wyebot_prometheus_restart_policy }}
+      -p {{ wyebot_prometheus_port }}:8014
+      -e WYEBOT_API_KEY={{ wyebot_prometheus_api_key }}
+      -e WYEBOT_API_URL={{ wyebot_prometheus_api_url }}
+      {{ wyebot_prometheus_image }}
+  changed_when: true
+  notify:
+    - Restart wyebot prometheus exporter
+
+- name: Wait for exporter to become ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ wyebot_prometheus_port }}/metrics"
+    method: GET
+    status_code: 200
+    return_content: false
+  register: _wyebot_prometheus_health
+  until: _wyebot_prometheus_health.status == 200
+  retries: 12
+  delay: 5

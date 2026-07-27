@@ -1,0 +1,9 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+- name: Test wyebot.wifi.prometheus_exporter role
+  hosts: localhost
+  connection: local
+  roles:
+    - role: wyebot.wifi.prometheus_exporter
+      wyebot_prometheus_api_key: "test-key-for-ci"

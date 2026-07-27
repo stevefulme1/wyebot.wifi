@@ -1,0 +1,48 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# Cisco vendor remediation tasks for wyebot.wifi.wifi_remediation
+# Placeholder for cisco.ios collection modules
+
+- name: Cisco - Change radio channel via CLI
+  ansible.builtin.debug:
+    msg: >-
+      [CISCO] Would execute channel change on AP '{{ item.ap_name | default('unknown') }}'
+      via cisco.ios.ios_config for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'channel_change' in remediation_actions"
+
+- name: Cisco - Restart access point
+  ansible.builtin.debug:
+    msg: >-
+      [CISCO] Would restart AP '{{ item.ap_name | default('unknown') }}'
+      via cisco.ios.ios_command for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'ap_restart' in remediation_actions"
+
+- name: Cisco - Adjust radio power level
+  ansible.builtin.debug:
+    msg: >-
+      [CISCO] Would adjust radio power on AP '{{ item.ap_name | default('unknown') }}'
+      via cisco.ios.ios_config for alert '{{ item.alert_type | default('unknown') }}'
+  loop: "{{ _actionable_alerts }}"
+  loop_control:
+    label: "{{ item.ap_name | default('unknown') }}"
+  when:
+    - not dry_run
+    - "'power_adjustment' in remediation_actions"
+
+- name: Cisco - Dry run summary
+  ansible.builtin.debug:
+    msg: >-
+      [DRY RUN] Cisco remediation skipped for {{ _actionable_alerts | length }} alert(s).
+      Actions that would execute: {{ remediation_actions | join(', ') }}
+  when: dry_run

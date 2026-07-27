@@ -1,0 +1,194 @@
+{
+  "uid": "wyebot-spectrum",
+  "title": "Wyebot - RF Spectrum Analysis",
+  "description": "Radio frequency spectrum analysis from Wyebot WiFi sensors",
+  "tags": ["wyebot", "spectrum", "rf", "wifi"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "label": "Data Source"
+      },
+      {
+        "name": "sensor",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(wyebot_sensor_info, sensor_name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {},
+        "label": "Sensor"
+      },
+      {
+        "name": "band",
+        "type": "custom",
+        "query": "2.4GHz,5GHz,6GHz",
+        "current": {"text": "All", "value": "$__all"},
+        "includeAll": true,
+        "multi": true,
+        "label": "Band"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Noise Floor by Channel",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "wyebot_spectrum_noise_floor_dbm{sensor_name=~\"$sensor\", band=~\"$band\"}",
+          "legendFormat": "Ch {{channel}} ({{band}}) - {{sensor_name}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "stacking": {"mode": "none"}
+          },
+          "unit": "dBm",
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "asc"},
+        "legend": {"displayMode": "table", "placement": "bottom", "calcs": ["mean", "min", "max"]}
+      }
+    },
+    {
+      "id": 2,
+      "title": "Channel Utilization Over Time",
+      "type": "heatmap",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "wyebot_spectrum_channel_busy_percent{sensor_name=~\"$sensor\", band=~\"$band\"}",
+          "legendFormat": "Ch {{channel}}",
+          "range": true,
+          "format": "heatmap"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "calculate": true,
+        "calculation": {
+          "xBuckets": {"mode": "size", "value": "5m"},
+          "yBuckets": {"mode": "count", "value": "15"}
+        },
+        "color": {
+          "mode": "scheme",
+          "scheme": "Spectral",
+          "reverse": true,
+          "fill": "dark-orange",
+          "exponent": 0.5
+        },
+        "yAxis": {"unit": "percent"},
+        "tooltip": {"show": true},
+        "cellGap": 1
+      }
+    },
+    {
+      "id": 3,
+      "title": "Non-WiFi Interference Events",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(wyebot_spectrum_interference_events_total{sensor_name=~\"$sensor\", band=~\"$band\"}[5m])",
+          "legendFormat": "{{interference_type}} - {{sensor_name}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "stacking": {"mode": "normal"},
+            "showPoints": "never"
+          },
+          "unit": "evts",
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom"}
+      }
+    },
+    {
+      "id": 4,
+      "title": "AP Count per Channel",
+      "type": "barchart",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "wyebot_spectrum_ap_count{sensor_name=~\"$sensor\", band=~\"$band\"}",
+          "legendFormat": "Ch {{channel}} ({{band}})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "hue",
+            "axisCenteredZero": false
+          },
+          "unit": "none",
+          "decimals": 0,
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "barWidth": 0.8,
+        "groupWidth": 0.7,
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "single"}
+      }
+    }
+  ]
+}

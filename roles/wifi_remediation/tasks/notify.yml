@@ -1,0 +1,42 @@
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+# Notification tasks for wyebot.wifi.wifi_remediation
+
+- name: Build remediation summary payload
+  ansible.builtin.set_fact:
+    _remediation_payload:
+      timestamp: "{{ ansible_date_time.iso8601 }}"
+      vendor: "{{ remediation_vendor }}"
+      dry_run: "{{ dry_run }}"
+      total_alerts: "{{ _actionable_alerts | length }}"
+      actions_requested: "{{ remediation_actions }}"
+      alerts: >-
+        {{
+          _actionable_alerts | map(attribute='alert_type', default='unknown')
+          | list
+        }}
+
+- name: Send remediation notification via webhook
+  ansible.builtin.uri:
+    url: "{{ notification_webhook }}"
+    method: POST
+    body_format: json
+    body: "{{ _remediation_payload }}"
+    headers:
+      Content-Type: "application/json"
+    status_code:
+      - 200
+      - 201
+      - 202
+      - 204
+    timeout: 30
+  register: _notification_result
+  failed_when: false
+
+- name: Report notification status
+  ansible.builtin.debug:
+    msg: >-
+      Webhook notification {{ 'sent successfully' if _notification_result.status | default(0) | int in [200, 201, 202, 204]
+      else 'failed with status ' ~ (_notification_result.status | default('unknown')) }}
+      to {{ notification_webhook }}
