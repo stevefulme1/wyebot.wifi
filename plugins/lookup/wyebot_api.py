@@ -103,6 +103,7 @@ import json
 import os
 from urllib.parse import urlencode
 
+from ansible.errors import AnsibleLookupError
 from ansible.plugins.lookup import LookupBase
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError

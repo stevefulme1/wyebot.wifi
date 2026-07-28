@@ -11,7 +11,6 @@ from unittest.mock import patch
 import pytest
 
 from ansible_collections.wyebot.wifi.plugins.module_utils.wyebot_api import (
-    WyebotAPI,
     WyebotAPIError,
 )
 

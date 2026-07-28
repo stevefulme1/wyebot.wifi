@@ -90,12 +90,8 @@ DOCUMENTATION = """
 """
 
 EXAMPLES = """
-# Minimal inventory file (wyebot.yml or mycloud.wyebot.yaml)
 ---
-plugin: wyebot.wifi.wyebot
-api_key: "my-secret-api-key"
-
-# Full example with all options
+# Full example with all options (wyebot.yml or mycloud.wyebot.yaml)
 plugin: wyebot.wifi.wyebot
 api_key: "my-secret-api-key"
 api_url: "https://api.wyebot.com/api/v1"
@@ -113,13 +109,7 @@ keyed_groups:
     prefix: firmware
     separator: "_"
 strict: false
-
-# Using environment variables for credentials
----
-plugin: wyebot.wifi.wyebot
-# api_key read from WYEBOT_API_KEY environment variable
-group_by:
-  - location
+# api_key can also be set via the WYEBOT_API_KEY environment variable
 """
 
 import json
