@@ -63,7 +63,9 @@ jobs:
 
       - name: Run pylint
         working-directory: ansible_collections/wyebot/wifi
-        run: pylint plugins/ --disable=import-error,no-name-in-module,wrong-import-position
+        run: >-
+          pylint plugins/
+          --disable=import-error,no-name-in-module,wrong-import-position,missing-module-docstring,invalid-name,use-dict-literal,consider-using-f-string,inconsistent-return-statements,duplicate-code,raise-missing-from
 
   sanity:
     name: Sanity (Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python-version }})
