@@ -218,13 +218,13 @@ class WyebotAPI:
                     ),
                     status_code=exc.code,
                     response_body=error_body,
-                )
+                ) from exc
             except URLError as exc:
                 raise WyebotAPIError(
                     "Failed to connect to Wyebot API at {0}: {1}".format(
                         url, exc.reason,
                     ),
-                )
+                ) from exc
 
         # Should not reach here, but handle gracefully
         raise WyebotAPIError(

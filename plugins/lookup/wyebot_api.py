@@ -186,15 +186,15 @@ class LookupModule(LookupBase):
         except HTTPError as e:
             raise AnsibleLookupError(
                 "Wyebot API request failed: GET {0} returned HTTP {1}".format(url, e.code)
-            )
+            ) from e
         except URLError as e:
             raise AnsibleLookupError(
                 "Failed to connect to Wyebot API at {0}: {1}".format(url, str(e.reason))
-            )
+            ) from e
         except Exception as e:
             raise AnsibleLookupError(
                 "Unexpected error communicating with Wyebot API: {0}".format(str(e))
-            )
+            ) from e
 
     def _build_url(self, api_url, method_name, data):
         """Build the full API URL for a given method.

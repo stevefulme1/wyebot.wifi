@@ -201,15 +201,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         except HTTPError as e:
             raise AnsibleParserError(
                 "Wyebot API request failed: GET {0} returned HTTP {1}".format(url, e.code)
-            )
+            ) from e
         except URLError as e:
             raise AnsibleParserError(
                 "Failed to connect to Wyebot API at {0}: {1}".format(url, str(e.reason))
-            )
+            ) from e
         except Exception as e:
             raise AnsibleParserError(
                 "Unexpected error communicating with Wyebot API: {0}".format(str(e))
-            )
+            ) from e
 
     def _fetch_locations(self):
         """Fetch all locations from the Wyebot API.
