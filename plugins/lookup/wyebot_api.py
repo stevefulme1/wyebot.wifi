@@ -120,7 +120,11 @@ SUPPORTED_METHODS = {
         "params": ["sensor_id", "test_type", "limit"],
         "required": ["sensor_id"],
     },
-    "get_alerts": {"endpoint": "/alerts", "list_key": "alerts", "params": ["location_id", "sensor_id", "severity", "limit"]},
+    "get_alerts": {
+        "endpoint": "/alerts",
+        "list_key": "alerts",
+        "params": ["location_id", "sensor_id", "severity", "limit"],
+    },
     "get_clients": {
         "endpoint": "/sensors/{sensor_id}/clients",
         "list_key": "clients",

@@ -1,2 +1,1 @@
 tests/unit/plugins/modules/test_wyebot_location_info.py compile-2.7!skip
-tests/unit/plugins/modules/test_wyebot_location_info.py import-2.7!skip

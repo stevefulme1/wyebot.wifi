@@ -170,7 +170,8 @@ def main():
         elif location_id is not None:
             # Get all sensors at this location, then fetch health for each
             sensors_result = client.get_sensors(location_id)
-            sensors = sensors_result.get("sensors", sensors_result) if isinstance(sensors_result, dict) else sensors_result
+            sensors = (sensors_result.get("sensors", sensors_result)
+                      if isinstance(sensors_result, dict) else sensors_result)
             if not isinstance(sensors, list):
                 sensors = [sensors] if sensors else []
 
