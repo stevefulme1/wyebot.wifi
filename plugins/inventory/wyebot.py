@@ -6,8 +6,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 DOCUMENTATION = """
-    name: wyebot.wifi.wyebot
-    plugin_type: inventory
+    name: wyebot
     author:
       - Steve Fulmer (@stevefulmer)
     version_added: "1.0.0"
@@ -97,7 +96,6 @@ plugin: wyebot.wifi.wyebot
 api_key: "my-secret-api-key"
 
 # Full example with all options
----
 plugin: wyebot.wifi.wyebot
 api_key: "my-secret-api-key"
 api_url: "https://api.wyebot.com/api/v1"

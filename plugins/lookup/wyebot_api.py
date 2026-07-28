@@ -52,8 +52,6 @@ DOCUMENTATION = """
       data:
         description:
           - Dictionary of keyword arguments to pass to the API method.
-          - For example, C({"location_id": 42}) for C(get_sensors) or
-            C({"sensor_id": 1, "severity": "critical"}) for C(get_alerts).
         type: dict
         default: {}
     notes:
@@ -103,9 +101,8 @@ _list:
 
 import json
 import os
-from urllib.parse import urlencode, quote
+from urllib.parse import urlencode
 
-from ansible.errors import AnsibleLookupError
 from ansible.plugins.lookup import LookupBase
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError

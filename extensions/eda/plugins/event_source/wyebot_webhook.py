@@ -99,7 +99,6 @@ import logging
 import ssl as ssl_mod
 
 try:
-    import aiohttp
     from aiohttp import web
 
     HAS_AIOHTTP = True

@@ -25,7 +25,6 @@ options:
     description: API key for Wyebot Cloud authentication.
     type: str
     required: true
-    no_log: true
   api_url:
     description: Base URL for the Wyebot Cloud API.
     type: str

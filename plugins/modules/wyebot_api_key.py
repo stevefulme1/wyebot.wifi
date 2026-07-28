@@ -25,7 +25,6 @@ options:
     description: API key for Wyebot Cloud authentication.
     type: str
     required: true
-    no_log: true
   api_url:
     description: Base URL for the Wyebot Cloud API.
     type: str
@@ -102,7 +101,6 @@ api_key_value:
     Store this securely as it cannot be retrieved again.
   type: str
   returned: when state=present and not check mode
-  no_log: true
   sample: "wyebot_ak_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 created_at:
   description: Timestamp when the API key was created.

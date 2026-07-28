@@ -18,10 +18,9 @@ __metaclass__ = type
 
 import json
 import time
-import ssl
 
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError
+from ansible.module_utils.urls import open_url
 
 
 # ---------------------------------------------------------------------------
@@ -175,19 +174,17 @@ class WyebotAPI:
             'Accept': 'application/json',
         }
 
-        req = Request(url, data=payload, headers=headers, method='POST')
-
-        # SSL context
-        ssl_ctx = None
-        if not self.validate_certs:
-            ssl_ctx = ssl.create_default_context()
-            ssl_ctx.check_hostname = False
-            ssl_ctx.verify_mode = ssl.CERT_NONE
-
         last_exc = None
         for attempt in range(self._MAX_RETRIES + 1):
             try:
-                resp = urlopen(req, timeout=self.timeout, context=ssl_ctx)
+                resp = open_url(
+                    url,
+                    data=payload,
+                    headers=headers,
+                    method='POST',
+                    timeout=self.timeout,
+                    validate_certs=self.validate_certs,
+                )
                 body = resp.read().decode('utf-8')
                 try:
                     return json.loads(body)

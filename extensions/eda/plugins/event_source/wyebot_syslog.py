@@ -266,7 +266,7 @@ async def main(queue: asyncio.Queue, args: dict):
                     return
                 asyncio.ensure_future(self._handler(message))
 
-        transport, _ = await asyncio.get_event_loop().create_datagram_endpoint(
+        transport, _protocol = await asyncio.get_event_loop().create_datagram_endpoint(
             lambda: _SyslogUDPProtocol(_process_message),
             local_addr=(host, port),
         )
